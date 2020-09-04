@@ -1,0 +1,99 @@
+#include<cstdio>
+#include<cctype>
+#include<algorithm>
+#include<vector>
+using namespace std;
+typedef long long ll;
+inline int read()
+{
+	int res = 0;
+	char c;
+	bool flag = false;
+	c = getchar();
+	while(!isdigit(c))
+	{
+		flag = (c == '-');
+		c = getchar();
+	}
+	while(isdigit(c))
+	{
+		res = res * 10 + (c ^ 48);
+		c = getchar();
+	}
+	return !flag ? res : -res;
+}
+const int Max_n = 2e3 + 5;
+struct node{
+	int nex , to;
+	node(int a , int b)
+	{
+		nex = a , to = b;
+	}
+	node(){}
+}edge[Max_n << 2];
+const int MOD = 924844033;
+int head[Max_n * 2] , tot , n , k , siz[Max_n * 2];
+ll jc[Max_n ] , g[Max_n] , f[Max_n * 2][Max_n][2];
+vector<int> fin;
+bool vis[Max_n * 2];
+inline void add_edge(int x , int y)
+{
+	edge[ ++ tot] = node(head[x] , y) , head[x] = tot;
+	edge[ ++ tot] = node(head[y] , x) , head[y] = tot;
+}
+void dp(int now , int from)
+{
+	vis[now] = true;
+	siz[now] = siz[from] + 1;
+	bool flag = true;
+	for(int i = head[now] ; i ; i = edge[i].nex)
+	{
+		int nex = edge[i].to;
+		if(nex == from)	continue;
+		f[nex][0][0] = f[now][0][0] + f[now][0][1] , f[nex][0][0] %= MOD;
+		for(int j = 1 ; j <= n ; ++ j)
+		{
+			f[nex][j][0] = f[now][j][0] + f[now][j][1] , f[nex][j][0] %= MOD;
+			f[nex][j][1] = f[now][j - 1][0];
+		}
+		flag = false;
+		dp(nex , now);
+	}
+	if(flag)	fin.push_back(now);
+}
+int main()
+{
+	n = read() , k = read();
+	for(int i = 1 ; i <= n ; ++ i)
+	{
+		if(i - k > 0)	
+			add_edge(i , i - k + n);
+		if(i + k <= n)	
+			add_edge(i , i + k + n);
+	}
+	for(int i = 1 ; i <= n ; ++ i)
+	{
+		if(!vis[i])	f[i][0][0] = 1 , dp(i , 0);
+		if(!vis[i + n])	f[i + n][0][0] = 1 , dp(i + n , 0);
+	}
+	g[0] = 1;
+	int sz = fin.size();
+	for(int i = 0 ; i < sz ; ++ i)
+	{
+		int now = fin[i];
+		for(int j = n ; j >= 1 ; -- j)
+			for(int h = j - 1 ; h >= max(0 , j - (siz[now] / 2 + 1)) ; -- h)
+					g[j] += g[h] * ((f[now][j - h][0] + f[now][j - h][1]) % MOD) , g[j] %= MOD;
+			
+	}
+	jc[0] = 1;
+	for(int i = 1 ; i <= n ; ++ i)
+		jc[i] = jc[i - 1] * i % MOD;
+	ll ans = jc[n];
+	for(int i = 1 ; i <= n ; ++ i)
+		if(i % 2)	ans -= g[i] * jc[n - i] , ans %= MOD;
+		else ans += g[i] * jc[n - i] , ans %= MOD;
+	ans = (ans + MOD) % MOD;
+	printf("%lld\n" , ans);
+	return 0;
+}
