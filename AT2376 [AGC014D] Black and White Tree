@@ -1,0 +1,95 @@
+#include <cstdio>
+#include <cstring>
+#include <cctype>
+#include <algorithm>
+using namespace std;
+
+namespace thecold
+{
+	inline int read()
+	{
+		int res = 0;
+		char c;
+		bool flag = false;
+		c = getchar();
+		while(!isdigit(c))
+		{
+			flag = (c == '-');
+			c = getchar();
+		}
+		while(isdigit(c))
+		{
+			res = res * 10 + (c ^ 48);
+			c = getchar();
+		}
+		return !flag ? res : -res;
+	}
+	
+	const int Max_n = 1e5 + 5;
+	
+	int t , head[Max_n] , tot , n;
+	
+	struct node
+	{
+		int nex , to;
+		node(int a , int b)
+		{
+			nex = a , to = b;
+		}
+		node(){}
+	}edge[Max_n * 2];
+	
+	bool wqqka = true;
+	
+	bool dfs(const int now , const int from)
+	{
+		int cntson = 0 , cntfalse = 0 , cnttrue = 0;
+		for(int i = head[now] ; i ; i = edge[i].nex)
+		{
+			int nex = edge[i].to;
+			if(nex == from)	continue;
+			++ cntson;
+			if(dfs(nex , now))	++ cnttrue;
+			else ++ cntfalse;
+			if(cntfalse > 1)	throw wqqka;
+		}
+		if(!cntson)	return false;
+		if(cnttrue == cntson)	return false;
+		return true;
+	}
+	
+	inline void add_edge(const int x , const int y)
+	{
+		edge[ ++ tot] = node(head[x] , y) , head[x] = tot;
+		edge[ ++ tot] = node(head[y] , x) , head[y] = tot;
+	}
+
+	inline void main()
+	{
+		t = 1;
+		while(t --)
+		{
+			memset(head , 0 , sizeof(head)) , tot = 0;
+			n = read() , wqqka = false;
+			for(int i = 1 ; i < n ; ++ i)
+				add_edge(read() , read());
+			try
+			{
+				wqqka = !dfs(1 , 0);	
+			}
+			catch (...)
+			{
+				puts("First");
+				continue;
+			}
+			if(wqqka)	puts("First");
+			else puts("Second");
+		}
+	}
+}
+
+int main()
+{
+	thecold::main();
+	return 0;
+}
