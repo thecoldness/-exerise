@@ -1,0 +1,116 @@
+#include <cstdio>
+#include <algorithm>
+#include <cstring>
+#include <cctype>
+using namespace std;
+
+namespace thecold
+{
+	inline int read()
+	{
+		int res = 0;
+		char c;
+		bool flag = false;
+		c = getchar();
+		while(!isdigit(c))
+		{
+			flag = (c == '-');
+			c = getchar();
+		}
+		while(isdigit(c))
+		{
+			res = res * 10 + (c ^ 48);
+			c = getchar();
+		}
+		return !flag ? res : -res;
+	}
+	
+	const int Max_n = 2e5 + 5;
+	
+	struct node
+	{
+		int nex , to , val;
+		node(int a , int b , int c)
+		{
+			nex = a , to = b , val = c;
+		}
+		node(){}
+	}edge[Max_n << 3];
+	
+	int n , head[Max_n << 1] , tot = 1;
+	int siz[Max_n] , ans[Max_n];
+	
+	inline void add_edge(const int x , const int y , const int d)
+	{
+		edge[ ++ tot] = node(head[x] , y , d) , head[x] = tot;
+		edge[ ++ tot] = node(head[y] , x , -d) , head[y] = tot;
+	}
+	
+	inline void dfs_tree(const int now , const int from)
+	{
+		siz[now] = 0;
+		for(int i = head[now] ; i ; i = edge[i].nex)
+		{
+			int nex = edge[i].to;
+			if(nex == from)	continue;
+			dfs_tree(nex , now);
+			++ siz[now];
+		}
+	}
+	
+	inline void IMP()
+	{
+		puts("IMPOSSIBLE"); exit(0);
+	}
+	
+	bool vis[Max_n << 4]; int beg[Max_n << 2];
+	
+	void dfs_eular(const int now)
+	{
+		for(int &i = beg[now] ; i ; i = edge[i].nex)
+		{
+			if(vis[i]) continue;
+//			beg[now] = i; int nex = edge[i].nex;bug
+			beg[now] = i; int nex = edge[i].to , tmp = i;
+			vis[i] = vis[i ^ 1] = true;
+			dfs_eular(nex);
+//			if(edge[i].val)	ans[now] = edge[i].val; bug
+			if(edge[tmp].val) ans[now > n ? now - n : now] = edge[tmp].val;
+		}
+	}
+	
+	inline void main()
+	{
+		n = read();
+		for(int i = 1 ; i <= n ; ++ i)
+		{
+			int ui = read();
+			if(ui == -1) add_edge(0 , i , 0);
+			else add_edge(ui , i , 0);
+		}
+		for(int i = 1 ; i <= n ; ++ i)
+		{
+			int ui = read();
+			if(ui == -1)	add_edge(0 , i + n , 0);
+			else add_edge(n + ui , n + i , 0);
+		}
+		dfs_tree(0 , 0);
+		for(int i = 1 ; i <= n ; ++ i)
+			if((siz[i] + siz[n + i]) % 2) IMP();
+		for(int i = 1 ; i <= n ; ++ i)
+			if(siz[i] % 2 == 0)	add_edge(i , i + n , 1);
+		for(int i = 0 ; i <= 2 * n ; ++ i)
+			beg[i] = head[i];
+		dfs_eular(0);
+		puts("POSSIBLE");
+		for(int i = 1 ; i <= n ; ++ i)
+			printf("%d " , ans[i]);
+	}
+}
+
+int main()
+{
+//	freopen("data.in" , "r" , stdin);
+	thecold::main();
+	return 0;
+}
