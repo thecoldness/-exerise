@@ -1,0 +1,67 @@
+#include <cstdio>
+#include <algorithm>
+#include <cstring>
+using namespace std;
+
+namespace thecold
+{
+	typedef long long ll;
+
+	const int jzp = 998244353;
+	const int Max_n = 5e5 + 5;
+
+	inline int quickpow(ll x , ll y)
+	{
+		ll ret = 1;
+		while(y)
+		{
+			if(y & 1) ret = ret * x % jzp;
+			x = x * x % jzp , y >>= 1;
+		}
+		return ret;
+	}
+
+	inline int add(const int x , const int y)
+	{
+		int ret = x + y;
+		if(ret >= jzp) ret -= jzp;
+		return ret;
+	}
+
+	ll jc[Max_n << 1] , invjc[Max_n << 1]; int n , m;
+
+	inline void pre_work()
+	{
+		jc[0] = invjc[0] = 1;
+		for(int i = 1 ; i <= n + m ; ++ i) jc[i] = jc[i - 1] * i % jzp;
+		invjc[n + m] = quickpow(jc[n + m] , jzp - 2);
+		for(int i = n + m - 1 ; i ; -- i) invjc[i] = invjc[i + 1] * (i + 1) % jzp;
+	}
+
+	inline int C(const int n , const int m)
+	{
+		if(m > n) return 0;
+		return jc[n] * invjc[m] % jzp * invjc[n - m] % jzp;
+	}
+
+	inline int ni(const int x)
+	{
+		return quickpow(x , jzp - 2);
+	}
+
+	inline void main()
+	{
+		scanf("%d %d" , &n , &m); if(n < m) swap(n , m);
+		pre_work(); int ans = 0;
+		for(int i = 1 ; i <= m ; ++ i)
+			ans = add(ans , 1ll * C(2 * i , i) * C(n - i + m - i , m - i) % jzp);
+		ans = 1ll * ans * ni(2ll * C(n + m , m) % jzp) % jzp;
+		ans = add(ans , n); printf("%d\n" , ans);
+	}
+}
+
+int main()
+{
+	thecold::main();
+	return 0;
+}
