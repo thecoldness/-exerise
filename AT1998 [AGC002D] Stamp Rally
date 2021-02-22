@@ -1,0 +1,128 @@
+#include <cstdio>
+#include <algorithm>
+#include <cstring>
+#include <cctype>
+using namespace std;
+
+namespace thecold
+{
+	inline int read()
+	{
+		int res = 0; bool flag = false;
+		char c = getchar();
+		while(!isdigit(c))
+			flag = (c == '-') , c = getchar();
+		while(isdigit(c))
+			res = res * 10 + (c ^ 48) , c = getchar();
+		return !flag ? res : -res;
+	}
+
+	const int Max_n = 1e5 + 5;
+
+	int fa[Max_n] , siz[Max_n] , tot;
+	int n , q , m , ans[Max_n] , tp;
+
+	struct node
+	{
+		int from , to;
+		node(int a , int b)
+		{
+			from = a , to = b;
+		}
+		node(){}
+	}edge[Max_n];
+
+	struct Node
+	{
+		int xi , yi , zi , bel;
+		Node(int a , int b , int c , int d)
+		{
+			xi = a , yi = b , zi = c , bel = d;
+		}
+		Node(){}
+	}opt[20][Max_n];
+
+	struct NODE
+	{
+		int fx , fy , sx , sy;
+		NODE(int a , int b , int c , int d)
+		{
+			fx = a , fy = b , sx = c , sy = d;
+		}
+		NODE(){}
+	}st[Max_n];
+
+	inline int find(int x)
+	{
+		while(fa[x] != x) x = fa[x];
+		return x;
+	}
+
+	inline void merge(const int x , const int y)
+	{
+		int fx = find(x) , fy = find(y);
+		if(fx == fy) return;
+		st[ ++ tp] = NODE(fx , fy , siz[fx] , siz[fy]);
+		if(siz[fx] > siz[fy]) swap(fx , fy);
+		fa[fx] = fy , siz[fy] += siz[fx];
+	}
+
+	inline int calc(const int x , const int y)
+	{
+		int fx = find(x) , fy = find(y);
+		if(fx == fy) return siz[fx];
+		return siz[fx] + siz[fy];
+	}
+
+	inline void recover(const int goal)
+	{
+		while(tp > goal)
+		{
+			int fx = st[tp].fx , fy = st[tp].fy , sx = st[tp].sx , sy = st[tp].sy;
+			fa[fx] = fx , fa[fy] = fy , siz[fx] = sx , siz[fy] = sy , -- tp;
+		}
+	}
+
+	inline void solve(const int l , const int r , const int ql , const int qr , const int dep)
+	{
+		if(ql > qr) return;
+		if(l == r)
+		{	
+			for(int i = ql ; i <= qr ; ++ i) ans[opt[dep][i].bel] = l;
+			return;
+		}
+		int mid = (l + r) >> 1 , tmptp = tp , tl = ql - 1 , tr = qr + 1;
+		for(int i = l ; i <= mid ; ++ i)	merge(edge[i].from , edge[i].to);
+		for(int i = ql ; i <= qr ; ++ i)
+		{
+			int sum = calc(opt[dep][i].xi , opt[dep][i].yi);
+			if(sum >= opt[dep][i].zi) opt[dep + 1][ ++ tl] = opt[dep][i];
+			// else opt[dep + 1][-- tl] = opt[dep][i]; bug
+			else opt[dep + 1][-- tr] = opt[dep][i];
+		}
+		solve(mid + 1 , r , tr , qr , dep + 1);
+		recover(tmptp);
+		solve(l , mid , ql , tl , dep + 1);
+	}
+
+	inline void main()
+	{
+		n = read() , m = read();
+		for(int i = 1 ; i <= m ; ++ i) edge[i] = node(read() , read());
+		for(int i = 1 ; i <= n ; ++ i) fa[i] = i , siz[i] = 1;
+		q = read();
+		for(int i = 1 ; i <= q ; ++ i)
+		{
+			int ui = read() , vi = read() , zi = read();
+			opt[0][i] = Node(ui , vi , zi , i);
+		}
+		solve(1 , m , 1 , q , 0);
+		for(int i = 1 ; i <= q ; ++ i) printf("%d\n" , ans[i]);
+	}
+}
+
+int main()
+{
+	thecold::main();
+	return 0;
+}
