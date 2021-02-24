@@ -1,0 +1,140 @@
+#include <cstdio>
+#include <cstring>
+#include <algorithm>
+#include <cctype>
+#include <queue>
+#include <utility>
+using namespace std;
+
+namespace thecold
+{
+	inline int read()
+	{
+		int res = 0; bool flag = false;
+		char c = getchar();
+		while(!isdigit(c))
+			flag = (c == '-') , c = getchar();
+		while(isdigit(c))
+			res = res * 10 + (c ^ 48) , c = getchar();
+		return !flag ? res : -res;
+	}
+
+	const int Max_n = 1e5 + 5;
+	const int INF = 1e8;
+
+	int n , head[Max_n << 1] , tot = 1 , s , t;
+
+	struct node
+	{
+		int nex , to , val;
+		node(int a , int b , int c)
+		{
+			nex = a , to = b , val = c;
+		}
+		node(){}
+	}edge[Max_n << 4];
+
+	inline void add_edge(const int x , const int y , const int z)
+	{
+		// printf("%d %d\n" , x , y);
+		edge[ ++ tot] = node(head[x] , y , z) , head[x] = tot;
+		edge[ ++ tot] = node(head[y] , x , 0) , head[y] = tot;
+	}
+
+	queue<int> q;
+
+	int dis[Max_n << 1] , beg[Max_n << 1];
+
+	inline bool bfs()
+	{
+		while(q.size()) q.pop(); 
+		memset(dis , 0x3f , sizeof(dis)); memset(beg , 0 , sizeof(beg));
+		q.push(s) , dis[s] = 0 , beg[s] = head[s];
+		while(q.size())
+		{
+			int now = q.front(); q.pop();
+			for(int i = head[now] ; i ; i = edge[i].nex)
+			{
+				int nex = edge[i].to; 
+				if(dis[nex] != 0x3f3f3f3f || !edge[i].val) continue;
+				dis[nex] = dis[now] + 1; beg[nex] = head[nex];
+				if(nex == t) return true;
+				q.push(nex);
+			}
+		}
+		return false;
+	}
+
+	int dinic(const int now , int flow)
+	{
+		if(now == t) return flow;
+		int ret = 0;
+		for(int i = beg[now] ; i ; i = edge[i].nex)
+		{
+			beg[now] = i; int nex = edge[i].to; 
+			if(dis[nex] != dis[now] + 1 || !edge[i].val) continue;
+			int tmp = dinic(nex , min(flow , edge[i].val));
+			if(tmp == 0) dis[nex] = 0x3f3f3f3f;
+			ret += tmp , flow -= tmp , edge[i].val -= tmp , edge[i ^ 1].val += tmp;
+			if(!flow) break;
+		}
+		return ret;
+	}
+
+	pair<int , int> ans[Max_n];
+
+	bool vis[Max_n << 1];
+
+	void dfs_ans(const int now , const int from , const int type)
+	{
+		vis[now] = true;
+		if(type == 0)
+		{
+			for(int i = head[now] ; i ; i = edge[i].nex)
+			{
+				int nex = edge[i].to; if(vis[nex] || !edge[i].val) continue;
+				dfs_ans(nex , now , 1); //return; bug
+			}
+		}
+		else
+		{
+			for(int i = head[now] ; i ; i = edge[i].nex)
+			{
+				int nex = edge[i].to;
+				// if(vis[nex] || edge[i].val) continue; bug
+				if(vis[nex] || !edge[i].val) continue;
+				ans[now - n] = make_pair(from , nex);
+				dfs_ans(nex , now , 0); return;
+			}
+		}
+	}
+
+	inline void main()
+	{
+		n = read(); s = 0 , t = 2 * n;
+		for(int i = 1 ; i < n ; ++ i)
+		{ 
+			int sz = read(); add_edge(i + n , t , 1);
+			for(int j = 1 ; j <= sz ; ++ j)
+				add_edge(read() , n + i , 1);
+		}
+		for(int i = 1 ; i <= n ; ++ i) add_edge(s , i , 1);
+		int flow = 0;
+		while(bfs()) flow += dinic(s , INF);
+		if(flow != n - 1) { puts("-1"); return;}
+		vis[0] = true;
+		for(int i = head[0] ; i ; i = edge[i].nex)
+			if(edge[i].val) dfs_ans(edge[i].to , 0 , 0);
+		for(int i = 1 ; i <= n ; ++ i)
+			if(!vis[i]) {puts("-1"); return;}
+		for(int i = 1 ; i < n ; ++ i)
+			printf("%d %d\n" , ans[i].first , ans[i].second);
+	}
+}
+
+int main()
+{
+	// freopen("data.in" , "r" , stdin);
+	thecold::main();
+	return 0;
+}
